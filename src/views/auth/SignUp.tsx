@@ -1,6 +1,7 @@
 import AuthInputField from '@components/AuthInputField';
 import AppInput from '@ui/AppInput';
 import colors from '@utils/colors';
+import {Formik} from 'formik';
 import {FC, useState} from 'react';
 import {
   Button,
@@ -13,13 +14,14 @@ import {
 
 interface Props {}
 
+const initialValues = {
+  name: '',
+  email: '',
+  password: '',
+};
+
 const SignUp: FC<Props> = props => {
   const [userInfo, setUserInfo] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
-  const [errorInfo, setErrorInfo] = useState({
     name: '',
     email: '',
     password: '',
@@ -27,68 +29,45 @@ const SignUp: FC<Props> = props => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.formContainer}>
-        <AuthInputField
-          placeholder="John Doe"
-          label="Name"
-          containerStyle={styles.marginBottom}
-          onChange={text => {
-            setUserInfo({...userInfo, name: text});
-          }}
-          errorMsg={errorInfo.name}
-        />
-        <AuthInputField
-          placeholder="john@email.com"
-          label="Email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          containerStyle={styles.marginBottom}
-          onChange={text => {
-            setUserInfo({...userInfo, email: text});
-          }}
-          errorMsg={errorInfo.email}
-        />
-        <AuthInputField
-          placeholder="********"
-          label="Password"
-          autoCapitalize="none"
-          secureTextEntry
-          onChange={text => {
-            setUserInfo({...userInfo, password: text});
-          }}
-          errorMsg={errorInfo.password}
-        />
-        <Button
-          onPress={() => {
-            if (!userInfo.name)
-              return setErrorInfo({
-                email: '',
-                password: '',
-                name: 'Name is missing!',
-              });
-            if (!userInfo.email)
-              return setErrorInfo({
-                name: '',
-                password: '',
-                email: 'Email is missing!',
-              });
-            if (!userInfo.password)
-              return setErrorInfo({
-                name: '',
-                email: '',
-                password: 'Password is missing!',
-              });
-
-            setErrorInfo({
-              name: '',
-              email: '',
-              password: '',
-            });
-            console.log(userInfo);
-          }}
-          title="Sign up"
-        />
-      </View>
+      <Formik
+        onSubmit={values => {
+          console.log(values);
+        }}
+        initialValues={initialValues}
+        // validationSchema={}
+      >
+        {({handleSubmit, handleChange, values}) => {
+          return (
+            <View style={styles.formContainer}>
+              <AuthInputField
+                placeholder="John Doe"
+                label="Name"
+                containerStyle={styles.marginBottom}
+                onChange={handleChange('name')}
+                value={values.name}
+              />
+              <AuthInputField
+                placeholder="john@email.com"
+                label="Email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                containerStyle={styles.marginBottom}
+                onChange={handleChange('email')}
+                value={values.email}
+              />
+              <AuthInputField
+                placeholder="********"
+                label="Password"
+                autoCapitalize="none"
+                secureTextEntry
+                onChange={handleChange('password')}
+                value={values.password}
+              />
+              <Button onPress={() => handleSubmit} title="Sign up" />
+            </View>
+          );
+        }}
+      </Formik>
     </SafeAreaView>
   );
 };
