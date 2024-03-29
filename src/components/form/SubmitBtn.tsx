@@ -1,3 +1,4 @@
+import AppButton from '@ui/AppButton';
 import {useFormikContext} from 'formik';
 import {FC} from 'react';
 import {StyleSheet, Button, GestureResponderEvent} from 'react-native';
@@ -10,7 +11,7 @@ interface Props {
 const SubmitBtn: FC<Props> = props => {
   const {handleSubmit} = useFormikContext();
   return (
-    <Button
+    <AppButton
       onPress={handleSubmit as (e?: GestureResponderEvent) => void}
       title={props.title}
     />
