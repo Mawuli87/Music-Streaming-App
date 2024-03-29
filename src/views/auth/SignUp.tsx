@@ -1,12 +1,25 @@
 import AuthInputField from '@components/AuthInputField';
 import AppInput from '@ui/AppInput';
 import colors from '@utils/colors';
-import {FC} from 'react';
-import {SafeAreaView, StyleSheet, Text, TextInput, View} from 'react-native';
+import {FC, useState} from 'react';
+import {
+  Button,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 interface Props {}
 
 const SignUp: FC<Props> = props => {
+  const [userInfo, setUserInfo] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.formContainer}>
@@ -14,6 +27,9 @@ const SignUp: FC<Props> = props => {
           placeholder="John Doe"
           label="Name"
           containerStyle={styles.marginBottom}
+          onChange={text => {
+            setUserInfo({...userInfo, name: text});
+          }}
         />
         <AuthInputField
           placeholder="john@email.com"
@@ -21,12 +37,24 @@ const SignUp: FC<Props> = props => {
           keyboardType="email-address"
           autoCapitalize="none"
           containerStyle={styles.marginBottom}
+          onChange={text => {
+            setUserInfo({...userInfo, email: text});
+          }}
         />
         <AuthInputField
           placeholder="********"
           label="Password"
           autoCapitalize="none"
           secureTextEntry
+          onChange={text => {
+            setUserInfo({...userInfo, password: text});
+          }}
+        />
+        <Button
+          onPress={() => {
+            console.log(userInfo);
+          }}
+          title="Sign up"
         />
       </View>
     </SafeAreaView>
