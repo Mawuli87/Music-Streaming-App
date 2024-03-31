@@ -33,7 +33,7 @@ const Verification: FC<Props> = props => {
 
   const handlePaste = (value: string) => {
     if (value.length === 6) {
-      Keyboard.dismiss();
+      //Keyboard.dismiss();
       const newOtp = value.split('');
       setOtp([...newOtp]);
     }
