@@ -9,6 +9,8 @@ import AppLink from '@ui/AppLink';
 import AuthFormContainer from '@components/AuthFormContainer';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {AuthStackParamList} from 'src/@types/navigation';
+import {FormikHelpers} from 'formik';
+import client from 'src/api/client';
 
 const signinSchema = yup.object({
   email: yup
@@ -20,10 +22,19 @@ const signinSchema = yup.object({
     .string()
     .trim('Password is missing!')
     .min(8, 'Password is too short!')
-    .required('Password is required!'),
+    .required('Password is required!')
+    .matches(
+      /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[a-zA-Z\d!@#\$%\^&\*]+$/,
+      'A special character is missing!',
+    ),
 });
 
 interface Props {}
+
+interface SignInUserInfo {
+  email: string;
+  password: string;
+}
 
 const initialValues = {
   email: '',
@@ -38,11 +49,26 @@ const SignIn: FC<Props> = props => {
     setSecureEntry(!secureEntry);
   };
 
+  const handleSubmit = async (
+    values: SignInUserInfo,
+    actions: FormikHelpers<SignInUserInfo>,
+  ) => {
+    actions.setSubmitting(true);
+    try {
+      // we want to send these information to our api
+      const {data} = await client.post('/auth/sign-in', {
+        ...values,
+      });
+      console.log(data);
+    } catch (error) {
+      console.log('Sign in error: ', error);
+    }
+    actions.setSubmitting(false);
+  };
+
   return (
     <Form
-      onSubmit={values => {
-        console.log(values);
-      }}
+      onSubmit={handleSubmit}
       initialValues={initialValues}
       validationSchema={signinSchema}>
       <AuthFormContainer heading="Welcome back!">
