@@ -9,9 +9,10 @@ interface Props {
 }
 
 const SubmitBtn: FC<Props> = props => {
-  const {handleSubmit} = useFormikContext();
+  const {handleSubmit, isSubmitting} = useFormikContext();
   return (
     <AppButton
+      busy={isSubmitting}
       onPress={handleSubmit as (e?: GestureResponderEvent) => void}
       title={props.title}
     />
