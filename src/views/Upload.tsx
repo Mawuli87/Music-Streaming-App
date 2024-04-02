@@ -1,8 +1,11 @@
 import CategorySelector from '@components/CategorySelector';
 import FileSelector from '@components/FileSelector';
 import AppButton from '@ui/AppButton';
+import Progress from '@ui/Progress';
+import {Keys, getFromAsyncStorage} from '@utils/asyncStorage';
 import {categories} from '@utils/categories';
 import colors from '@utils/colors';
+import {mapRange} from '@utils/math';
 import {FC, useState} from 'react';
 import {
   View,
@@ -14,6 +17,7 @@ import {
 } from 'react-native';
 import {DocumentPickerResponse, types} from 'react-native-document-picker';
 import MaterialComIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import client from 'src/api/client';
 import * as yup from 'yup';
 
 interface Props {}
@@ -54,8 +58,67 @@ const Upload: FC<Props> = props => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [audioInfo, setAudioInfo] = useState({...defaultForm});
 
-  const handleUpload = () => {
-    console.log(audioInfo);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  const handleUpload = async () => {
+    setBusy(true);
+    try {
+      const finalData = await audioInfoSchema.validate(audioInfo);
+
+      const formData = new FormData();
+
+      formData.append('title', finalData.title);
+      formData.append('about', finalData.about);
+      formData.append('category', finalData.category);
+      formData.append('file', {
+        name: finalData.file.name,
+        type: finalData.file.type,
+        uri: finalData.file.uri,
+      });
+
+      if (finalData.poster.uri)
+        formData.append('poster', {
+          name: finalData.poster.name,
+          type: finalData.poster.type,
+          uri: finalData.poster.uri,
+        });
+
+      const token = await getFromAsyncStorage(Keys.AUTH_TOKEN);
+
+      console.log(token);
+
+      const {data} = await client.post('/audio/create', formData, {
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'multipart/form-data;',
+        },
+        //upload progress bar
+        onUploadProgress(progressEvent) {
+          const uploaded = mapRange({
+            inputMin: 0,
+            inputMax: progressEvent.total || 0,
+            outputMin: 0,
+            outputMax: 100,
+            inputValue: progressEvent.loaded,
+          });
+
+          if (uploaded >= 100) {
+            setAudioInfo({...defaultForm});
+            setBusy(false);
+          }
+
+          setUploadProgress(Math.floor(uploaded));
+        },
+      });
+
+      console.log(data);
+    } catch (error) {
+      if (error instanceof yup.ValidationError)
+        console.log('Validation error: ', error.message);
+      else console.log(error.response.data);
+    }
+    setBusy(false);
   };
 
   return (
@@ -100,6 +163,7 @@ const Upload: FC<Props> = props => {
           onChangeText={text => {
             setAudioInfo({...audioInfo, title: text});
           }}
+          value={audioInfo.title}
         />
 
         <Pressable
@@ -120,6 +184,7 @@ const Upload: FC<Props> = props => {
           onChangeText={text => {
             setAudioInfo({...audioInfo, about: text});
           }}
+          value={audioInfo.about}
         />
 
         <CategorySelector
@@ -138,6 +203,10 @@ const Upload: FC<Props> = props => {
         />
 
         <View style={{marginBottom: 20}} />
+
+        <View style={{marginVertical: 20}}>
+          {busy ? <Progress progress={uploadProgress} /> : null}
+        </View>
 
         <AppButton borderRadius={7} title="Submit" onPress={handleUpload} />
       </View>
