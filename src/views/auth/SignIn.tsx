@@ -71,6 +71,9 @@ const SignIn: FC<Props> = props => {
       //sign in state
       dispatch(updateProfile(data.profile));
       dispatch(updateLoggedInState(true));
+      dispatch(
+        updateNotification({message: 'Login successfull', type: 'success'}),
+      );
     } catch (error) {
       const errorMessage = catchAsyncError(error);
       dispatch(updateNotification({message: errorMessage, type: 'error'}));

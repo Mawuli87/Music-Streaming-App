@@ -2,8 +2,11 @@ import AppCotnainer from '@components/AppCotnainer';
 import {clearAsyncStorage} from '@utils/asyncStorage';
 import {Provider} from 'react-redux';
 import AppNavigator from 'src/navigation/AppNavigator';
+import {QueryClient, QueryClientProvider} from 'react-query';
 
 import store from 'src/store';
+
+const queryClient = new QueryClient();
 
 const App = () => {
   // clearAsyncStorage().then(() => {
@@ -11,9 +14,11 @@ const App = () => {
   // });
   return (
     <Provider store={store}>
-      <AppCotnainer>
-        <AppNavigator />
-      </AppCotnainer>
+      <QueryClientProvider client={queryClient}>
+        <AppCotnainer>
+          <AppNavigator />
+        </AppCotnainer>
+      </QueryClientProvider>
     </Provider>
   );
 };
