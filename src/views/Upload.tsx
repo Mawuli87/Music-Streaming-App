@@ -113,7 +113,7 @@ const Upload: FC<Props> = props => {
       });
 
       console.log(data);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof yup.ValidationError)
         console.log('Validation error: ', error.message);
       else console.log(error.response.data);

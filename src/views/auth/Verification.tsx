@@ -9,12 +9,16 @@ import {AuthStackParamList} from 'src/@types/navigation';
 import client from 'src/api/client';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import colors from '@utils/colors';
+import catchAsyncError from 'src/api/catchError';
+import {updateNotification} from 'src/store/notification';
+import {useDispatch} from 'react-redux';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Verification'>;
 
 const otpFields = new Array(6).fill('');
 
 const Verification: FC<Props> = ({route}) => {
+  const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
   const [otp, setOtp] = useState([...otpFields]);
   const [activeOtpIndex, setActiveOtpIndex] = useState(0);
@@ -78,7 +82,8 @@ const Verification: FC<Props> = ({route}) => {
         userId: userInfo.id,
       });
     } catch (error) {
-      console.log('Requesting for new otp: ', error);
+      const errorMessage = catchAsyncError(error);
+      dispatch(updateNotification({message: errorMessage, type: 'error'}));
     }
   };
 
