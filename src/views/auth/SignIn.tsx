@@ -1,28 +1,23 @@
 import AuthInputField from '@components/form/AuthInputField';
 import Form from '@components/form';
-import colors from '@utils/colors';
 import {FC, useState} from 'react';
-import {Button, SafeAreaView, StyleSheet, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import * as yup from 'yup';
 import SubmitBtn from '@components/form/SubmitBtn';
 import PasswordVisibilityIcon from '@ui/PasswordVisibilityIcon';
 import AppLink from '@ui/AppLink';
+import AuthFormContainer from '@components/AuthFormContainer';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {AuthStackParamList} from 'src/@types/navigation';
 import {FormikHelpers} from 'formik';
-import axios from 'axios';
 import client from 'src/api/client';
-import {isAxiosError} from 'axios';
 import {useDispatch} from 'react-redux';
+import {updateLoggedInState, updateProfile} from 'src/store/auth';
+import {Keys, saveToAsyncStorage} from '@utils/asyncStorage';
 import catchAsyncError from 'src/api/catchError';
 import {updateNotification} from 'src/store/notification';
 
-const signupSchema = yup.object({
-  name: yup
-    .string()
-    .trim('Name is missing!')
-    .min(3, 'Invalid name!')
-    .required('Name is required!'),
+const signinSchema = yup.object({
   email: yup
     .string()
     .trim('Email is missing!')
@@ -32,30 +27,28 @@ const signupSchema = yup.object({
     .string()
     .trim('Password is missing!')
     .min(8, 'Password is too short!')
+    .required('Password is required!')
     .matches(
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[a-zA-Z\d!@#\$%\^&\*]+$/,
-      'Password is too simple!',
-    )
-    .required('Password is required!'),
+      'A special character is missing!',
+    ),
 });
 
 interface Props {}
-interface NewUser {
-  name: string;
+
+interface SignInUserInfo {
   email: string;
   password: string;
 }
 
 const initialValues = {
-  name: '',
   email: '',
   password: '',
 };
 
-const SignUp: FC<Props> = props => {
+const SignIn: FC<Props> = props => {
   const [secureEntry, setSecureEntry] = useState(true);
   const navigation = useNavigation<NavigationProp<AuthStackParamList>>();
-
   const dispatch = useDispatch();
 
   const togglePasswordView = () => {
@@ -63,19 +56,25 @@ const SignUp: FC<Props> = props => {
   };
 
   const handleSubmit = async (
-    values: NewUser,
-    actions: FormikHelpers<NewUser>,
+    values: SignInUserInfo,
+    actions: FormikHelpers<SignInUserInfo>,
   ) => {
     actions.setSubmitting(true);
     try {
       // we want to send these information to our api
-      const {data} = await client.post('/auth/create', {
+      const {data} = await client.post('/auth/sign-in', {
         ...values,
       });
 
-      navigation.navigate('Verification', {userInfo: data.user});
+      await saveToAsyncStorage(Keys.AUTH_TOKEN, data.token);
+
+      //sign in state
+      dispatch(updateProfile(data.profile));
+      dispatch(updateLoggedInState(true));
+      dispatch(
+        updateNotification({message: 'Login successfull', type: 'success'}),
+      );
     } catch (error) {
-      //console.log('Sign up error: ', error);
       const errorMessage = catchAsyncError(error);
       dispatch(updateNotification({message: errorMessage, type: 'error'}));
     }
@@ -83,21 +82,15 @@ const SignUp: FC<Props> = props => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Form
-        onSubmit={handleSubmit}
-        initialValues={initialValues}
-        validationSchema={signupSchema}>
+    <Form
+      onSubmit={handleSubmit}
+      initialValues={initialValues}
+      validationSchema={signinSchema}>
+      <AuthFormContainer heading="Welcome back!">
         <View style={styles.formContainer}>
           <AuthInputField
-            name="name"
-            placeholder="Mawuli Dev"
-            label="Name"
-            containerStyle={styles.marginBottom}
-          />
-          <AuthInputField
             name="email"
-            placeholder="mawuli@email.com"
+            placeholder="john@email.com"
             label="Email"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -113,7 +106,8 @@ const SignUp: FC<Props> = props => {
             rightIcon={<PasswordVisibilityIcon privateIcon={secureEntry} />}
             onRightIconPress={togglePasswordView}
           />
-          <SubmitBtn title="Sign up" />
+          <SubmitBtn title="Sign in" />
+
           <View style={styles.linkContainer}>
             <AppLink
               title="I Lost My Password"
@@ -122,28 +116,21 @@ const SignUp: FC<Props> = props => {
               }}
             />
             <AppLink
-              title="Sign in"
+              title="Sign up"
               onPress={() => {
-                navigation.navigate('SignIn');
+                navigation.navigate('SignUp');
               }}
             />
           </View>
         </View>
-      </Form>
-    </SafeAreaView>
+      </AuthFormContainer>
+    </Form>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.PRIMARY,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   formContainer: {
     width: '100%',
-    paddingHorizontal: 15, // padding in the x direction (left and the right)
   },
   marginBottom: {
     marginBottom: 20,
@@ -156,4 +143,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignUp;
+export default SignIn;
