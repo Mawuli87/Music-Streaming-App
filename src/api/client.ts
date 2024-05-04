@@ -2,10 +2,10 @@ import {Keys, getFromAsyncStorage} from '@utils/asyncStorage';
 import axios, {CreateAxiosDefaults} from 'axios';
 
 const client = axios.create({
-  baseURL: 'http://192.168.46.164:8989',
+  baseURL: 'http://192.168.43.188:8989',
 });
 
-const baseURL = 'http://192.168.46.164:8989';
+const baseURL = 'http://192.168.43.188:8989';
 
 type headers = CreateAxiosDefaults<any>['headers'];
 
@@ -23,6 +23,8 @@ export const getClient = async (headers?: headers) => {
 };
 
 export default client;
+
+//http://192.168.46.164:8989/profile/uploads
 
 //192.168.43.188 huawai
 //galaxi
